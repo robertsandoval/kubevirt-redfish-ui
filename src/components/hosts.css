@@ -1,0 +1,28 @@
+.kubevirt-hosts__bmc {
+  max-width: 28rem;
+}
+
+.kubevirt-hosts__mono {
+  font-family: var(--pf-t--global--font--family--mono, monospace);
+  font-size: 0.875rem;
+  word-break: break-all;
+}
+
+.kubevirt-hosts__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.kubevirt-hosts__chassis-list {
+  max-width: 100%;
+}
+
+.kubevirt-hosts__system-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}

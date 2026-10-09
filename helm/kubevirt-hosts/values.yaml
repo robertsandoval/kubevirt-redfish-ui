@@ -1,0 +1,71 @@
+plugin:
+  # ConsolePlugin / Service / Deployment name
+  name: kubevirt-hosts
+  description: Kubevirt Systems admin UI for redfish-controller
+
+  # Container image serving the built plugin assets over HTTPS
+  image: quay.io/kubevirt/kubevirt-hosts-console-plugin:0.1.0
+  imagePullPolicy: IfNotPresent
+  imagePullSecrets: []
+
+  replicas: 2
+  port: 9443
+  basePath: /
+
+  # Leave empty to let OpenShift create a serving cert Secret via
+  # service.beta.openshift.io/serving-cert-secret-name
+  certificateSecretName: ""
+
+  resources:
+    requests:
+      cpu: 10m
+      memory: 50Mi
+    limits:
+      memory: 128Mi
+
+  securityContext:
+    enabled: true
+
+  podSecurityContext:
+    enabled: true
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+
+  containerSecurityContext:
+    enabled: true
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+
+  serviceAccount:
+    create: true
+    annotations: {}
+    name: ""
+
+  patcherServiceAccount:
+    create: true
+    annotations: {}
+    name: ""
+
+  # Post-install Job that adds this plugin to consoles.operator.openshift.io/cluster
+  jobs:
+    patchConsoles:
+      enabled: true
+      image: registry.redhat.io/openshift4/ose-cli:latest
+      podSecurityContext:
+        enabled: true
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containerSecurityContext:
+        enabled: true
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+            - ALL
+      resources:
+        requests:
+          cpu: 10m
+          memory: 50Mi

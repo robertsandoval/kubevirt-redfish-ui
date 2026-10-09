@@ -1,0 +1,55 @@
+{{- if .Values.plugin.jobs.patchConsoles.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "kubevirt-hosts.patcherName" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "kubevirt-hosts.labels" . | nindent 4 }}
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-delete-policy: before-hook-creation
+    helm.sh/hook-weight: "5"
+spec:
+  parallelism: 1
+  backoffLimit: 6
+  template:
+    metadata:
+      labels:
+        {{- include "kubevirt-hosts.labels" . | nindent 8 }}
+    spec:
+      restartPolicy: OnFailure
+      serviceAccountName: {{ include "kubevirt-hosts.patcherServiceAccountName" . }}
+      {{- if and .Values.plugin.securityContext.enabled .Values.plugin.jobs.patchConsoles.podSecurityContext.enabled }}
+      securityContext:
+        {{- omit .Values.plugin.jobs.patchConsoles.podSecurityContext "enabled" | toYaml | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: patch-consoles
+          image: {{ required "plugin.jobs.patchConsoles.image must be set" .Values.plugin.jobs.patchConsoles.image }}
+          imagePullPolicy: IfNotPresent
+          {{- if and .Values.plugin.securityContext.enabled .Values.plugin.jobs.patchConsoles.containerSecurityContext.enabled }}
+          securityContext:
+            {{- omit .Values.plugin.jobs.patchConsoles.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.plugin.jobs.patchConsoles.resources | nindent 12 }}
+          command:
+            - /bin/bash
+            - -c
+            - |
+              set -euo pipefail
+              PLUGIN_NAME="{{ include "kubevirt-hosts.name" . }}"
+              # IMPORTANT: only ADD this plugin. Never replace .spec.plugins (that
+              # can wipe kubevirt-plugin and other console menu extensions).
+              existing="$(oc get consoles.operator.openshift.io cluster -o jsonpath='{.spec.plugins[*]}' 2>/dev/null || true)"
+              if echo " ${existing} " | grep -Fq " ${PLUGIN_NAME} "; then
+                echo "Console plugin already enabled: ${PLUGIN_NAME}"
+                echo "Current plugins: ${existing}"
+                exit 0
+              fi
+              oc patch consoles.operator.openshift.io cluster --type=json \
+                -p "[{\"op\":\"add\",\"path\":\"/spec/plugins/-\",\"value\":\"${PLUGIN_NAME}\"}]"
+              echo "Enabled console plugin: ${PLUGIN_NAME}"
+              oc get consoles.operator.openshift.io cluster -o jsonpath='{.spec.plugins}{"\n"}'
+{{- end }}

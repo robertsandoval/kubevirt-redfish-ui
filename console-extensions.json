@@ -1,0 +1,37 @@
+[
+  {
+    "type": "console.page/route",
+    "properties": {
+      "exact": true,
+      "path": "/kubevirt-hosts",
+      "component": { "$codeRef": "HostsPage" }
+    }
+  },
+  {
+    "type": "console.page/route",
+    "properties": {
+      "exact": true,
+      "path": "/kubevirt-hosts/create",
+      "component": { "$codeRef": "CreateHostPage" }
+    }
+  },
+  {
+    "type": "console.page/route",
+    "properties": {
+      "exact": true,
+      "path": "/kubevirt-hosts/ns/:ns/vm/:name",
+      "component": { "$codeRef": "HostDetailPage" }
+    }
+  },
+  {
+    "type": "console.navigation/href",
+    "properties": {
+      "id": "kubevirt-hosts",
+      "name": "%plugin__kubevirt-hosts~Kubevirt Systems%",
+      "href": "/kubevirt-hosts",
+      "perspective": "admin",
+      "section": "compute",
+      "insertAfter": "virtualization"
+    }
+  }
+]

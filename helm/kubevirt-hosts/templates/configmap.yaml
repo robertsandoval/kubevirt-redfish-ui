@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "kubevirt-hosts.name" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "kubevirt-hosts.labels" . | nindent 4 }}
+data:
+  nginx.conf: |
+    worker_processes auto;
+    error_log /dev/stdout info;
+    pid /tmp/nginx.pid;
+    events {
+      worker_connections 1024;
+    }
+    http {
+      access_log /dev/stdout;
+      include /etc/nginx/mime.types;
+      default_type application/octet-stream;
+      keepalive_timeout 65;
+      client_body_temp_path /tmp/client_temp;
+      proxy_temp_path /tmp/proxy_temp;
+      fastcgi_temp_path /tmp/fastcgi_temp;
+      uwsgi_temp_path /tmp/uwsgi_temp;
+      scgi_temp_path /tmp/scgi_temp;
+      server {
+        listen {{ .Values.plugin.port }} ssl;
+        listen [::]:{{ .Values.plugin.port }} ssl;
+        ssl_certificate /var/cert/tls.crt;
+        ssl_certificate_key /var/cert/tls.key;
+        root /usr/share/nginx/html;
+        location / {
+          try_files $uri $uri/ /index.html;
+        }
+      }
+    }

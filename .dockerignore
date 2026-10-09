@@ -1,0 +1,35 @@
+# Local install / build artifacts (huge; never needed in context)
+node_modules
+dist
+coverage
+install-state.gz
+
+# VCS / editor
+.git
+.gitignore
+.DS_Store
+*.md
+.devcontainer
+
+# Not required for production webpack image build
+helm
+integration-tests
+playwright.config.ts
+jest.config.ts
+setup-tests.ts
+i18n-scripts
+i18next-parser.config.js
+Makefile
+CLAUDE.md
+AGENTS.md
+
+# Yarn: keep releases (needed to run yarn); drop other local yarn state
+.yarn/*
+!.yarn/releases
+!.yarn/releases/**
+!.yarn/patches
+!.yarn/patches/**
+!.yarn/plugins
+!.yarn/plugins/**
+!.yarn/versions
+!.yarn/versions/**

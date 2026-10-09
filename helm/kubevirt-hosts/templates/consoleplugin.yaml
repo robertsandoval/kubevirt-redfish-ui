@@ -1,0 +1,17 @@
+apiVersion: console.openshift.io/v1
+kind: ConsolePlugin
+metadata:
+  name: {{ include "kubevirt-hosts.name" . }}
+  labels:
+    {{- include "kubevirt-hosts.labels" . | nindent 4 }}
+spec:
+  displayName: {{ .Values.plugin.description | default (printf "%s Plugin" (include "kubevirt-hosts.name" .)) | quote }}
+  i18n:
+    loadType: Preload
+  backend:
+    type: Service
+    service:
+      name: {{ include "kubevirt-hosts.name" . }}
+      namespace: {{ .Release.Namespace }}
+      port: {{ .Values.plugin.port }}
+      basePath: {{ .Values.plugin.basePath }}

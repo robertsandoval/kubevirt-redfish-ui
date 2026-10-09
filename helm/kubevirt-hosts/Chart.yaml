@@ -1,0 +1,16 @@
+apiVersion: v2
+name: kubevirt-hosts
+description: OpenShift Console plugin for administering KubeVirt hosts via redfish-controller
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - openshift
+  - console-plugin
+  - kubevirt
+  - redfish
+home: https://github.com/kubevirt/redfish-admin-ui
+maintainers:
+  - name: KubeVirt Redfish
+sources:
+  - https://github.com/kubevirt/redfish-admin-ui

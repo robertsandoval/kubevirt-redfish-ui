@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "kubevirt-hosts.name" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "kubevirt-hosts.labels" . | nindent 4 }}
+    app.openshift.io/runtime-namespace: {{ .Release.Namespace }}
+spec:
+  replicas: {{ .Values.plugin.replicas }}
+  selector:
+    matchLabels:
+      {{- include "kubevirt-hosts.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "kubevirt-hosts.labels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "kubevirt-hosts.serviceAccountName" . }}
+      {{- with .Values.plugin.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ include "kubevirt-hosts.name" . }}
+          image: {{ required "plugin.image must be set to your built console plugin image" .Values.plugin.image }}
+          imagePullPolicy: {{ .Values.plugin.imagePullPolicy }}
+          ports:
+            - name: https
+              containerPort: {{ .Values.plugin.port }}
+              protocol: TCP
+          {{- if and .Values.plugin.securityContext.enabled .Values.plugin.containerSecurityContext.enabled }}
+          securityContext:
+            {{- omit .Values.plugin.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.plugin.resources | nindent 12 }}
+          volumeMounts:
+            - name: plugin-cert
+              readOnly: true
+              mountPath: /var/cert
+            - name: nginx-conf
+              readOnly: true
+              mountPath: /etc/nginx/nginx.conf
+              subPath: nginx.conf
+          readinessProbe:
+            tcpSocket:
+              port: {{ .Values.plugin.port }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: {{ .Values.plugin.port }}
+            initialDelaySeconds: 15
+            periodSeconds: 20
+      volumes:
+        - name: plugin-cert
+          secret:
+            secretName: {{ include "kubevirt-hosts.certificateSecret" . }}
+            defaultMode: 420
+        - name: nginx-conf
+          configMap:
+            name: {{ include "kubevirt-hosts.name" . }}
+            defaultMode: 420
+      {{- if and .Values.plugin.securityContext.enabled .Values.plugin.podSecurityContext.enabled }}
+      securityContext:
+        {{- omit .Values.plugin.podSecurityContext "enabled" | toYaml | nindent 8 }}
+      {{- end }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
